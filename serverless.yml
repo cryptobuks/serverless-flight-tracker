@@ -13,11 +13,10 @@
 
 service: flightTracker
 custom:
-  AWS_DYNAMODB_TABLE: FlightsTrackerTable
-  AWS_REGION: us-east-1
-  AWS_ACCOUNT_NUMBER: "586011406659"
-  API_KEY_1: "AIzaSyCxsvclnIILX7J4qNQqt7TgQ53uIMyq0Cc"
-  API_KEY_2: "AIzaSyCBo-nSoLqt6o9NE3Aky1h7EEXkaX1oEXA"
+  AWS_DYNAMODB_TABLE: "DYNAMODB_TABLE_NAME"
+  AWS_REGION: "AWS REGION"
+  AWS_ACCOUNT_NUMBER: "YOUR_ACCOUNT_NUMBER"
+  API_KEY_1: "YOUR_GOOGLE_API_KEY"
 provider:
   name: aws
   runtime: nodejs4.3
@@ -65,7 +64,7 @@ functions:
       DYNAMODB_TABLE:
         Ref : FlightsTrackerTable 
       # ENV Variables can also be a reference to a global variable defined in serverless
-      API_KEY: ${self:custom.API_KEY_2} # ${self:custom.API_KEY_1}
+      API_KEY: ${self:custom.API_KEY_1}
     events:
      - schedule: rate(12 hours)
   checkPrices:
@@ -76,10 +75,10 @@ functions:
       # ENV Variables can also be just a field
       PHONE: "+543513592111"
     events:
-     - stream: arn:aws:dynamodb:us-east-1:586011406659:table/FlightsTrackerTable/stream/2016-11-22T21:05:50.469
-      #  Fn::GetAtt: 
-      #     - FlightsTrackerTable
-      #     - StreamArn
+     - stream: #arn:aws:dynamodb:us-east-1:586011406659:table/FlightsTrackerTable/stream/2016-11-22T21:05:50.469
+       Fn::GetAtt: 
+          - FlightsTrackerTable
+          - StreamArn
 
 # you can add CloudFormation resource templates here
 resources:
