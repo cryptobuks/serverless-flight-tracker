@@ -1,7 +1,6 @@
 var util = require("util");
 var AWS = require('aws-sdk');
 var sns = new AWS.SNS();
-var TO_PHONE = '+543513592111';
 module.exports.handle = (event, context, callback) => {
   console.log(JSON.stringify(event, null, 2));
   // store flight prices in an array
@@ -17,7 +16,7 @@ module.exports.handle = (event, context, callback) => {
       console.log(util.format('origin: %s, date: %s, price: %s', origin, date, price));
       switch (origin) {
         case 'COR':
-          if (price < 'USD1500') {
+          if (price < 'USD1550') {
             smsMessage += util.format('- %s %s in %s\n', flight, price, date);
           }
           break;
@@ -37,7 +36,7 @@ module.exports.handle = (event, context, callback) => {
   // Send SMS with the price updates
   var params = {
     Message: smsMessage,
-    PhoneNumber: TO_PHONE,
+    PhoneNumber: process.env.PHONE,
     MessageAttributes:{
       SMSType:{
         DataType: "String",

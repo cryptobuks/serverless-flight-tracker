@@ -11,16 +11,19 @@
 #
 # Happy Coding!
 
-service: flightTracker # NOTE: update this with your service name
-
+service: flightTracker
+custom:
+  AWS_DYNAMODB_TABLE: FlightsTrackerTable
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_NUMBER: "586011406659"
+  API_KEY_1: "AIzaSyCxsvclnIILX7J4qNQqt7TgQ53uIMyq0Cc"
+  API_KEY_2: "AIzaSyCBo-nSoLqt6o9NE3Aky1h7EEXkaX1oEXA"
 provider:
   name: aws
   runtime: nodejs4.3
   profile: pipe
-  memorySize: 128
-# you can overwrite defaults here
   stage: dev
-  region: us-east-1
+  region: ${self:custom.AWS_REGION}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -33,8 +36,8 @@ provider:
       Resource:
         Fn::Join:
           - ""
-          - - "arn:aws:dynamodb:us-east-1:586011406659:table/"
-            - "Ref" : "FlightsTrackerTable"
+          - - arn:aws:dynamodb:${self:custom.AWS_REGION}:${self:custom.AWS_ACCOUNT_NUMBER}:table/
+            - Ref : FlightsTrackerTable
     - Effect: Allow
       Action:
         - dynamodb:GetRecords
@@ -53,25 +56,30 @@ provider:
 #  artifact: my-service-code.zip
 
 functions:
-  trackFlights:
-    handler: getPrices.handle
+  fetchPrices:
+    handler: fetchPrices.handle
+    timeout: 300
+    memorySize: 128
+    environment:
+      # ENV Variables can be a reference to a generated resource (ie. table name)
+      DYNAMODB_TABLE:
+        Ref : FlightsTrackerTable 
+      # ENV Variables can also be a reference to a global variable defined in serverless
+      API_KEY: ${self:custom.API_KEY_2} # ${self:custom.API_KEY_1}
     events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - s3: ${env:BUCKET}
-     - schedule: rate(23 hours)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-
+     - schedule: rate(12 hours)
   checkPrices:
     handler: checkPrices.handle
+    timeout: 120
+    memorySize: 128
+    environment:
+      # ENV Variables can also be just a field
+      PHONE: "+543513592111"
     events:
-     - stream: 
-       arn:
-         Fn::GetAtt: 
-           - FlightsTrackerTable
-           - StreamArn
+     - stream: arn:aws:dynamodb:us-east-1:586011406659:table/FlightsTrackerTable/stream/2016-11-22T21:05:50.469
+      #  Fn::GetAtt: 
+      #     - FlightsTrackerTable
+      #     - StreamArn
 
 # you can add CloudFormation resource templates here
 resources:
@@ -79,7 +87,7 @@ resources:
    FlightsTrackerTable:
      Type: AWS::DynamoDB::Table
      Properties:
-       TableName: FlightsPriceTracker
+       TableName: ${self:custom.AWS_DYNAMODB_TABLE}
        AttributeDefinitions:
          - AttributeName: timestamp
            AttributeType: S
